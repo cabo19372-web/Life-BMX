@@ -6,6 +6,7 @@
 <meta name="theme-color" content="#090b09">
 <meta name="description" content="LifeBmx — treinamento, evolução e comunidade BMX Race.">
 <title>LifeBmx | BMX Race</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 
 <style>
 :root {
@@ -200,6 +201,68 @@ p{line-height:1.55}
 .toast.show{display:block}
 hr{border:0;border-top:1px solid var(--line);margin:18px 0}
 .footer-note{font-size:10px;color:#6e776b;text-align:center;padding:26px 10px}
+
+/* ===== TELA DE LOGIN ===== */
+.login{
+  position:fixed;inset:0;z-index:70;background:#000;overflow-y:auto;
+  display:flex;justify-content:center
+}
+.login.hide{display:none}
+.lg-screen{
+  width:100%;max-width:420px;min-height:100%;
+  padding:calc(28px + env(safe-area-inset-top)) 24px calc(24px + env(safe-area-inset-bottom));
+  display:flex;flex-direction:column
+}
+.lg-title{margin:48px 0 0;font-size:28px;font-weight:400;line-height:1.2;letter-spacing:-.5px}
+.lg-title b{display:block;color:var(--green);font-weight:900;font-style:italic;letter-spacing:1px}
+.lg-sub{margin:12px 0 0;font-size:13px}
+.lg-status{min-height:16px;margin:10px 0 0;font-size:12px;color:var(--green)}
+.lg-status.error{color:var(--danger)}
+.lg-form{margin-top:40px}
+.lg-field{position:relative;margin-bottom:14px}
+.lg-field input{
+  width:100%;height:54px;border:0;border-radius:10px;background:#262626;
+  color:var(--text);padding:0 48px 0 18px;font-size:14px;outline:none
+}
+.lg-field input::placeholder{color:var(--muted)}
+.lg-field input:focus{box-shadow:0 0 0 1px var(--green)}
+.lg-eye{
+  position:absolute;right:16px;top:50%;transform:translateY(-50%);
+  background:none;border:0;color:var(--muted);display:grid;padding:0
+}
+.lg-options{
+  display:flex;justify-content:space-between;align-items:center;
+  font-size:12px;color:var(--muted);margin-top:4px
+}
+.lg-options label{display:flex;align-items:center;gap:8px;cursor:pointer}
+.lg-options input{
+  appearance:none;-webkit-appearance:none;width:18px;height:18px;border-radius:4px;
+  background:#262626;border:1px solid #3a3a3a;cursor:pointer;margin:0
+}
+.lg-options input:checked{background:var(--green);border-color:var(--green)}
+.lg-options a{color:var(--muted);text-decoration:none}
+.lg-signin{
+  width:100%;height:52px;margin-top:26px;border:0;border-radius:8px;
+  color:#fff;font-weight:800;font-size:15px;letter-spacing:.5px;
+  background:linear-gradient(90deg,var(--green) 0%,#0a0f00 50%,var(--green) 100%)
+}
+.lg-signin:active{transform:scale(.99)}
+.lg-divider{
+  display:flex;align-items:center;gap:14px;margin-top:56px;
+  font-size:11px;letter-spacing:2px;color:var(--muted);text-transform:uppercase
+}
+.lg-divider::before,.lg-divider::after{content:"";flex:1;height:1px;background:#333}
+.lg-social{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:36px}
+.lg-social button{
+  height:46px;border:0;border-radius:8px;background:#262626;color:#d0d0d0;
+  display:grid;place-content:center
+}
+.lg-foot{
+  margin-top:auto;padding-top:40px;text-align:center;
+  font-size:11px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase
+}
+.lg-foot a{color:var(--green);text-decoration:none}
+
 @media(min-width:760px){
   .content{padding:30px 28px}
   .hero{min-height:390px;padding:35px}
@@ -219,6 +282,48 @@ hr{border:0;border-top:1px solid var(--line);margin:18px 0}
 </head>
 
 <body>
+
+<!-- TELA DE LOGIN -->
+<div class="login" id="login">
+  <main class="lg-screen">
+    <div class="brand">
+      <div class="brand-mark">LB</div>
+      <div>
+        <div class="brand-name">LIFE<span>BMX</span></div>
+        <div class="brand-sub">BMX RACE TRAINING</div>
+      </div>
+    </div>
+
+    <div class="lg-title" id="lgTitle">Bem-vindo à <b>LIFEBMX!</b></div>
+    <p class="lg-sub" id="lgSub">Confira os novos lançamentos</p>
+    <p class="lg-status" id="lgStatus"></p>
+
+    <form class="lg-form" id="lgForm" onsubmit="submitAuth(event)">
+      <div class="lg-field">
+        <input type="email" id="lgUser" placeholder="E-mail" autocomplete="username" required>
+      </div>
+      <div class="lg-field">
+        <input type="password" id="lgPass" placeholder="Senha" autocomplete="current-password" minlength="6" required>
+        <button type="button" class="lg-eye" aria-label="Mostrar senha"
+          onclick="const p=document.getElementById('lgPass');p.type=p.type==='password'?'text':'password'">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true">
+            <path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/><path d="M4 20 20 4"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="lg-options" id="lgRememberRow">
+        <label><input type="checkbox" id="lgRemember" checked> Lembrar de mim</label>
+        <a href="#" onclick="event.preventDefault();sendPasswordReset()">Esqueci a senha</a>
+      </div>
+
+      <button class="lg-signin" type="submit" id="lgSubmitBtn">ENTRAR</button>
+    </form>
+
+    <p class="lg-foot" id="lgToggleRow">Ainda não tem conta? <a href="#" onclick="event.preventDefault();toggleAuthMode()">Cadastre-se</a></p>
+  </main>
+</div>
+
 <div class="app">
 <header class="topbar">
   <div class="brand">
@@ -359,6 +464,7 @@ hr{border:0;border-top:1px solid var(--line);margin:18px 0}
   <div class="card">
     <p class="muted small">As informações deste protótipo ficam armazenadas no navegador deste dispositivo. Limpar os dados do navegador pode apagar seu histórico. Ainda não existe conta online nem sincronização entre aparelhos.</p>
     <button class="btn full" onclick="exportData()">Exportar meus dados</button>
+    <button class="btn full" style="margin-top:10px" onclick="logout()">Sair</button>
   </div>
 </section>
 
@@ -448,16 +554,22 @@ const workouts = [
  ]}
 ];
 
+const SUPABASE_URL='https://dmwhmljaqwherkewtjkr.supabase.co';
+const SUPABASE_KEY='sb_publishable_Oyiz7RsLJqY7ZpZu2RoaVQ_D4fx1iU-';
+const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
 const STORAGE_KEY='lifebmx_v2';
 const defaults={
  profile:{name:'',category:'Boys 15',level:'Iniciante',location:'Balneário Camboriú - SC'},
  goal:3,clubGoal:'',clubNotes:'',history:[]
 };
-let data=loadData();
+let data=structuredClone(defaults);
 let currentWorkout=null;
 let checkedExercises=new Set();
+let currentUser=null;
+let authMode='login'; // 'login' ou 'signup'
 
-function loadData(){
+function loadLocal(){
  try{
   const saved=JSON.parse(localStorage.getItem(STORAGE_KEY)||'null');
   if(!saved)return structuredClone(defaults);
@@ -467,9 +579,14 @@ function loadData(){
   };
  }catch(e){return structuredClone(defaults)}
 }
-function saveData(){
+function saveLocal(){
  try{localStorage.setItem(STORAGE_KEY,JSON.stringify(data));}
- catch(e){toast('Não foi possível salvar neste navegador.')}
+ catch(e){/* localStorage indisponível, ignora */}
+}
+// saveData grava local na hora e, se tiver usuário logado, sincroniza no Supabase
+function saveData(){
+ saveLocal();
+ if(currentUser)syncProfileToCloud();
 }
 function escapeHTML(value){
  return String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -480,6 +597,162 @@ function toast(message){
  clearTimeout(window._toastTimer);
  window._toastTimer=setTimeout(()=>el.classList.remove('show'),2400);
 }
+
+/* ===== LOGIN / CADASTRO (Supabase Auth) ===== */
+function hideLogin(){document.getElementById('login').classList.add('hide')}
+function showLogin(){document.getElementById('login').classList.remove('hide')}
+
+function setLgStatus(msg,isError){
+ const el=document.getElementById('lgStatus');
+ el.textContent=msg||'';
+ el.classList.toggle('error',!!isError);
+}
+
+function toggleAuthMode(){
+ authMode=authMode==='login'?'signup':'login';
+ setLgStatus('');
+ if(authMode==='signup'){
+  document.getElementById('lgTitle').innerHTML='Crie sua conta <b>LIFEBMX!</b>';
+  document.getElementById('lgSub').textContent='Leva menos de um minuto';
+  document.getElementById('lgSubmitBtn').textContent='CRIAR CONTA';
+  document.getElementById('lgRememberRow').style.visibility='hidden';
+  document.getElementById('lgToggleRow').innerHTML='Já tem conta? <a href="#" onclick="event.preventDefault();toggleAuthMode()">Entrar</a>';
+ }else{
+  document.getElementById('lgTitle').innerHTML='Bem-vindo à <b>LIFEBMX!</b>';
+  document.getElementById('lgSub').textContent='Confira os novos lançamentos';
+  document.getElementById('lgSubmitBtn').textContent='ENTRAR';
+  document.getElementById('lgRememberRow').style.visibility='visible';
+  document.getElementById('lgToggleRow').innerHTML='Ainda não tem conta? <a href="#" onclick="event.preventDefault();toggleAuthMode()">Cadastre-se</a>';
+ }
+}
+
+async function submitAuth(ev){
+ ev.preventDefault();
+ const email=document.getElementById('lgUser').value.trim();
+ const pass=document.getElementById('lgPass').value;
+ if(!email||!pass){setLgStatus('Preencha e-mail e senha.',true);return}
+ if(pass.length<6){setLgStatus('A senha precisa de pelo menos 6 caracteres.',true);return}
+
+ const btn=document.getElementById('lgSubmitBtn');
+ btn.disabled=true;
+ setLgStatus('');
+
+ if(authMode==='signup'){
+  const {error}=await sb.auth.signUp({email,password:pass});
+  btn.disabled=false;
+  if(error){setLgStatus(traduzErroAuth(error),true);return}
+  setLgStatus('Conta criada! Confira seu e-mail e confirme antes de entrar.',false);
+  document.getElementById('lgPass').value='';
+  return;
+ }
+
+ const {data:authData,error}=await sb.auth.signInWithPassword({email,password:pass});
+ btn.disabled=false;
+ if(error){setLgStatus(traduzErroAuth(error),true);return}
+ document.getElementById('lgPass').value='';
+ await onLoggedIn(authData.user);
+}
+
+function traduzErroAuth(error){
+ const m=(error&&error.message)||'';
+ if(m.includes('Invalid login credentials'))return 'E-mail ou senha incorretos.';
+ if(m.includes('Email not confirmed'))return 'Confirme seu e-mail antes de entrar.';
+ if(m.includes('User already registered'))return 'Esse e-mail já tem cadastro. Tente entrar.';
+ if(m.includes('Password should be'))return 'Senha muito curta (mínimo 6 caracteres).';
+ return m||'Não foi possível concluir. Tente novamente.';
+}
+
+async function sendPasswordReset(){
+ const email=document.getElementById('lgUser').value.trim();
+ if(!email){setLgStatus('Digite seu e-mail acima primeiro.',true);return}
+ const {error}=await sb.auth.resetPasswordForEmail(email);
+ if(error){setLgStatus(traduzErroAuth(error),true);return}
+ setLgStatus('Enviamos um link de recuperação para seu e-mail.',false);
+}
+
+async function onLoggedIn(user){
+ currentUser=user;
+ await loadProfileFromCloud();
+ hideLogin();
+ navigate('home');
+}
+
+async function logout(){
+ await sb.auth.signOut();
+ currentUser=null;
+ data=loadLocal();
+ document.getElementById('lgUser').value='';
+ document.getElementById('lgPass').value='';
+ setLgStatus('');
+ showLogin();
+}
+
+/* ===== Sincronização com o Supabase ===== */
+async function loadProfileFromCloud(){
+ if(!currentUser)return;
+ try{
+  const {data:row,error}=await sb.from('profiles').select('*').eq('id',currentUser.id).maybeSingle();
+  if(error)throw error;
+  if(row){
+   data.profile={
+    name:row.name||'',
+    category:row.category||defaults.profile.category,
+    level:row.level||defaults.profile.level,
+    location:row.location||''
+   };
+   data.goal=row.weekly_goal||3;
+   data.clubGoal=row.club_goal||'';
+   data.clubNotes=row.club_notes||'';
+  }
+  const {data:sessionsRows,error:sErr}=await sb.from('sessions')
+   .select('*').eq('user_id',currentUser.id).order('created_at',{ascending:false});
+  if(sErr)throw sErr;
+  data.history=(sessionsRows||[]).map(r=>({
+   id:r.id,workoutId:r.workout_id,name:r.name,category:r.category,
+   date:r.created_at,minutes:r.minutes,exercises:r.exercises,
+   totalExercises:r.total_exercises,notes:r.notes||''
+  }));
+  saveLocal();
+  renderAll();
+ }catch(e){
+  toast('Não foi possível carregar os dados da nuvem. Usando dados locais.');
+  data=loadLocal();
+  renderAll();
+ }
+}
+async function syncProfileToCloud(){
+ if(!currentUser)return;
+ try{
+  await sb.from('profiles').update({
+   name:data.profile.name,
+   category:data.profile.category,
+   level:data.profile.level,
+   location:data.profile.location,
+   weekly_goal:data.goal,
+   club_goal:data.clubGoal,
+   club_notes:data.clubNotes,
+   updated_at:new Date().toISOString()
+  }).eq('id',currentUser.id);
+ }catch(e){/* mantém local salvo mesmo se a nuvem falhar */}
+}
+async function addSessionToCloud(entry){
+ if(!currentUser)return null;
+ try{
+  const {data:row,error}=await sb.from('sessions').insert({
+   user_id:currentUser.id,workout_id:entry.workoutId,name:entry.name,
+   category:entry.category,minutes:entry.minutes,exercises:entry.exercises,
+   total_exercises:entry.totalExercises,notes:entry.notes
+  }).select().single();
+  if(error)throw error;
+  return row;
+ }catch(e){return null}
+}
+async function clearHistoryCloud(){
+ if(!currentUser)return;
+ try{await sb.from('sessions').delete().eq('user_id',currentUser.id);}
+ catch(e){/* ignora, local já foi limpo */}
+}
+
 function navigate(page){
  document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
  document.getElementById('page-'+page)?.classList.add('active');
@@ -556,7 +829,7 @@ function closeWorkout(){
  document.getElementById('workoutModal').classList.remove('open');
  currentWorkout=null;
 }
-function finishWorkout(){
+async function finishWorkout(){
  if(!currentWorkout)return;
  if(checkedExercises.size===0){toast('Marque pelo menos um exercício realizado.');return}
  const entry={
@@ -568,8 +841,12 @@ function finishWorkout(){
   notes:document.getElementById('sessionNotes').value.trim()
  };
  data.history.unshift(entry);
- saveData();closeWorkout();renderHome();renderProgress();
+ saveLocal();closeWorkout();renderHome();renderProgress();
  toast('Sessão registrada com sucesso.');
+ if(currentUser){
+  const row=await addSessionToCloud(entry);
+  if(row){entry.id=row.id;saveLocal();}
+ }
 }
 function renderProgress(){
  const totalMinutes=data.history.reduce((s,h)=>s+(Number(h.minutes)||0),0);
@@ -627,10 +904,11 @@ function renderProfile(){
  document.getElementById('clubGoal').value=data.clubGoal||'';
  document.getElementById('clubNotes').value=data.clubNotes||'';
 }
-function clearHistory(){
+async function clearHistory(){
  if(!data.history.length){toast('O histórico já está vazio.');return}
  if(!confirm('Apagar todas as sessões registradas? Esta ação não pode ser desfeita.'))return;
- data.history=[];saveData();renderProgress();renderHome();toast('Histórico apagado.');
+ data.history=[];saveLocal();renderProgress();renderHome();toast('Histórico apagado.');
+ if(currentUser)await clearHistoryCloud();
 }
 function exportData(){
  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
@@ -643,7 +921,22 @@ function renderAll(){
  renderProfile();renderHome();renderWorkouts();renderProgress();
 }
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeWorkout()});
+
+data=loadLocal();
 renderAll();
+
+(async function initAuth(){
+ const {data:sessionData}=await sb.auth.getSession();
+ if(sessionData&&sessionData.session&&sessionData.session.user){
+  await onLoggedIn(sessionData.session.user);
+ }
+})();
+
+sb.auth.onAuthStateChange((event,session)=>{
+ if(event==='SIGNED_OUT'){
+  currentUser=null;
+ }
+});
 </script>
 </body>
 </html>
